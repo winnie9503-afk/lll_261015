@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceWord 英文聽讀學習 APP</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-slate-50 text-slate-800 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                    <i class="fa-solid fa-headphones-simple text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">VoiceWord 聽讀學習</h1>
+                    <p class="text-xs text-slate-400">100+ 核心單字與互動闖關</p>
+                </div>
+            </div>
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center space-x-1">
+                <button onclick="switchTab('dashboard')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition active-tab" data-target="dashboard">
+                    <i class="fa-solid fa-chart-pie mr-1.5"></i> 學習儀表板
+                </button>
+                <button onclick="switchTab('vocab')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition" data-target="vocab">
+                    <i class="fa-solid fa-book-open mr-1.5"></i> 單字學習庫
+                </button>
+                <button onclick="switchTab('listenGame')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition" data-target="listenGame">
+                    <i class="fa-solid fa-volume-high mr-1.5"></i> 聽音辨識
+                </button>
+                <button onclick="switchTab('readGame')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition" data-target="readGame">
+                    <i class="fa-solid fa-spell-check mr-1.5"></i> 讀字判斷
+                </button>
+                <button onclick="switchTab('mistakes')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition relative" data-target="mistakes">
+                    <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> 錯題本
+                    <span id="mistakeBadge" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+                <button onclick="switchTab('custom')" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 transition" data-target="custom">
+                    <i class="fa-solid fa-plus-circle mr-1.5"></i> 自訂單字
+                </button>
+            </nav>
+            <!-- Mobile Menu Button -->
+            <div class="md:hidden flex items-center">
+                <button onclick="toggleMobileMenu()" class="p-2 rounded-lg text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobileMenu" class="hidden md:hidden border-t border-slate-100 px-4 py-2 space-y-1 bg-white">
+            <button onclick="switchTab('dashboard'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">學習儀表板</button>
+            <button onclick="switchTab('vocab'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">單字學習庫</button>
+            <button onclick="switchTab('listenGame'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">聽音辨識</button>
+            <button onclick="switchTab('readGame'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">讀字判斷</button>
+            <button onclick="switchTab('mistakes'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">錯題本</button>
+            <button onclick="switchTab('custom'); toggleMobileMenu();" class="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">自訂單字</button>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-y-auto">
+
+        <!-- TAB 1: 學習儀表板 (Dashboard) -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <div class="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-800 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-8 -translate-y-8 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">每日學習挑戰</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold mt-3">歡迎回來！準備好提升你的英文聽讀實力了嗎？</h2>
+                    <p class="text-indigo-100 mt-2 text-sm sm:text-base">透過 100+ 核心單字庫、AI 語音朗讀與無壓互動練習，輕鬆攻克多益與日常英語！</p>
+                    <div class="mt-6 flex flex-wrap gap-3">
+                        <button onclick="switchTab('listenGame')" class="bg-white text-indigo-700 hover:bg-indigo-50 font-semibold px-5 py-2.5 rounded-xl shadow transition flex items-center text-sm">
+                            <i class="fa-solid fa-headphones mr-2"></i> 開始聽音練習
+                        </button>
+                        <button onclick="switchTab('vocab')" class="bg-indigo-500/40 hover:bg-indigo-500/60 border border-white/30 text-white font-semibold px-5 py-2.5 rounded-xl transition flex items-center text-sm backdrop-blur">
+                            <i class="fa-solid fa-book-open mr-2"></i> 瀏覽單字庫
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">總單字庫容量</p>
+                        <h3 id="statTotalVocab" class="text-2xl font-bold text-slate-700">100</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">練習總答題數</p>
+                        <h3 id="statTotalAnswered" class="text-2xl font-bold text-slate-700">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">整體正確率</p>
+                        <h3 id="statAccuracy" class="text-2xl font-bold text-slate-700">0%</h3>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-medium">錯題待複習</p>
+                        <h3 id="statMistakes" class="text-2xl font-bold text-slate-700">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Access / Featured Words -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-lg text-slate-800"><i class="fa-solid fa-star text-amber-400 mr-2"></i>今日精選單字推薦</h3>
+                    <button onclick="switchTab('vocab')" class="text-sm text-indigo-600 hover:text-indigo-800 font-semibold">查看全部 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+                <div id="featuredWordsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Dynamic Featured Cards -->
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: 單字學習庫 (Vocab Library) -->
+        <section id="tab-vocab" class="tab-content hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">英文單字學習庫</h2>
+                    <p class="text-xs text-slate-400">點擊喇叭圖示即可聆聽標準發音</p>
+                </div>
+                <div class="w-full sm:w-72 relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="vocabSearchInput" oninput="filterVocabList()" placeholder="搜尋英文單字或中文..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <!-- Vocab Grid -->
+            <div id="vocabGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic Vocabulary Cards -->
+            </div>
+        </section>
+
+        <!-- TAB 3: 聽音辨識練習 (Listen Game) -->
+        <section id="tab-listenGame" class="tab-content hidden space-y-6">
+            <div class="max-w-xl mx-auto bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-8">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <span class="bg-indigo-50 text-indigo-600 font-semibold text-xs px-3 py-1 rounded-full"><i class="fa-solid fa-headphones mr-1"></i> 模式一：聽音辨識單字</span>
+                    <span id="listenScoreBoard" class="text-sm font-bold text-slate-600">正確數: 0 | 題數: 0</span>
+                </div>
+
+                <div id="listenGameArea" class="py-8 text-center space-y-6">
+                    <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white text-3xl shadow-lg shadow-indigo-200 cursor-pointer hover:scale-105 transition animate-pulse" onclick="playCurrentListenAudio()">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-slate-400">點擊上方按鈕播放發音，並選出正確的中文解釋</p>
+                        <h3 id="listenAudioPrompt" class="text-lg font-bold text-slate-700 mt-2">（請聽發音...）</h3>
+                    </div>
+
+                    <div id="listenOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <!-- Options generated dynamically -->
+                    </div>
+                </div>
+
+                <div id="listenFeedback" class="hidden text-center py-4 rounded-xl font-semibold text-sm"></div>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-between">
+                    <button onclick="initListenGame()" class="text-slate-500 hover:text-slate-800 text-sm font-medium"><i class="fa-solid fa-rotate-right mr-1"></i> 重新出題</button>
+                    <button id="nextListenBtn" onclick="nextListenQuestion()" class="hidden bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2 rounded-xl text-sm transition shadow-md shadow-indigo-100">下一題 <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: 讀字判斷練習 (Read Game) -->
+        <section id="tab-readGame" class="tab-content hidden space-y-6">
+            <div class="max-w-xl mx-auto bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-8">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                    <span class="bg-violet-50 text-violet-600 font-semibold text-xs px-3 py-1 rounded-full"><i class="fa-solid fa-spell-check mr-1"></i> 模式二：讀單字判斷是否正確</span>
+                    <span id="readScoreBoard" class="text-sm font-bold text-slate-600">正確數: 0 | 題數: 0</span>
+                </div>
+
+                <div id="readGameArea" class="py-8 text-center space-y-6">
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <span id="readPos" class="text-xs uppercase font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">noun</span>
+                        <h2 id="readWord" class="text-3xl font-bold text-slate-800 mt-2">Vocabulary</h2>
+                        <p class="text-xs text-slate-400 mt-1">請判斷下方中文解釋是否與此單字正確對應？</p>
+                    </div>
+
+                    <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                        <p class="text-xs text-indigo-500 font-semibold mb-1">中文解釋：</p>
+                        <h3 id="readChinese" class="text-xl font-bold text-slate-800">字彙、詞彙</h3>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-2">
+                        <button onclick="answerReadGame(true)" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-md shadow-emerald-100 transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-circle-check text-lg"></i> <span>正確 (True)</span>
+                        </button>
+                        <button onclick="answerReadGame(false)" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3.5 rounded-xl shadow-md shadow-rose-100 transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-circle-xmark text-lg"></i> <span>錯誤 (False)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="readFeedback" class="hidden text-center py-4 rounded-xl font-semibold text-sm"></div>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-between">
+                    <button onclick="initReadGame()" class="text-slate-500 hover:text-slate-800 text-sm font-medium"><i class="fa-solid fa-rotate-right mr-1"></i> 重新整理</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: 錯題本 (Mistakes) -->
+        <section id="tab-mistakes" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">錯題專屬複習本</h2>
+                    <p class="text-xs text-slate-400">系統自動收集您在練習中答錯的單字，加強記憶</p>
+                </div>
+                <button onclick="clearMistakes()" id="clearMistakesBtn" class="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl text-sm transition hidden">
+                    <i class="fa-solid fa-trash-can mr-1.5"></i> 清空錯題本
+                </button>
+            </div>
+
+            <div id="mistakesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic Mistakes Cards -->
+            </div>
+        </section>
+
+        <!-- TAB 6: 自訂單字 (Custom Vocab) -->
+        <section id="tab-custom" class="tab-content hidden space-y-6">
+            <div class="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sm:p-8 space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">新增自訂單字或片語</h2>
+                    <p class="text-xs text-slate-400">建立專屬你的單字庫，資料將自動儲存於瀏覽器中</p>
+                </div>
+
+                <form id="customVocabForm" onsubmit="addCustomVocab(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">英文單字 / 片語 *</label>
+                            <input type="text" id="customWord" required placeholder="例: serendipity" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">詞性 (POS) *</label>
+                            <select id="customPos" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="noun">noun (名詞)</option>
+                                <option value="verb">verb (動詞)</option>
+                                <option value="adj">adj (形容詞)</option>
+                                <option value="adv">adv (副詞)</option>
+                                <option value="phrase">phrase (片語)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">中文解釋 *</label>
+                        <input type="text" id="customMeaning" required placeholder="例: 意外發現珍奇事物的運氣" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">實用例句 (Example) *</label>
+                        <input type="text" id="customExample" required placeholder="例: Finding this book was a true serendipity." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-md shadow-indigo-100 transition text-sm">
+                        <i class="fa-solid fa-plus mr-1"></i> 新增至自訂單字庫
+                    </button>
+                </form>
+
+                <div class="pt-4 border-t border-slate-100">
+                    <h3 class="font-bold text-slate-800 text-sm mb-3">你新增的自訂單字清單</h3>
+                    <div id="customVocabList" class="space-y-2">
+                        <!-- Dynamic Custom Vocab List -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-sm">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <script>
+        // 100 Default Built-in Vocabulary List (Fixed syntax)
+        const defaultVocabs = [
+            { id: 1, word: "ability", pos: "noun", meaning: "能力、才能", example: "She has the ability to solve complex problems." },
+            { id: 2, word: "accept", pos: "verb", meaning: "接受、同意", example: "He decided to accept the job offer." },
+            { id: 3, word: "achieve", pos: "verb", meaning: "達成、實現", example: "Hard work helps you achieve your goals." },
+            { id: 4, word: "advantage", pos: "noun", meaning: "優勢、有利條件", example: "Speaking two languages is a great advantage." },
+            { id: 5, word: "advertise", pos: "verb", meaning: "為...做廣告、宣傳", example: "The company plans to advertise their new product." },
+            { id: 6, word: "affect", pos: "verb", meaning: "影響、感動", example: "Weather can heavily affect mood and productivity." },
+            { id: 7, word: "agency", pos: "noun", meaning: "代理機構、經銷處", example: "She works for a travel agency in Taipei." },
+            { id: 8, word: "alternative", pos: "adj", meaning: "替代的、另類的", example: "We need to find an alternative solution." },
+            { id: 9, word: "analyze", pos: "verb", meaning: "分析、解析", example: "Scientists analyze data to find patterns." },
+            { id: 10, word: "announce", pos: "verb", meaning: "宣布、宣告", example: "The manager will announce the new policy tomorrow." },
+            { id: 11, word: "annual", pos: "adj", meaning: "每年的、年度的", example: "Our annual meeting is held every December." },
+            { id: 12, word: "appreciation", pos: "noun", meaning: "欣賞、感激", example: "Please accept this gift as a token of appreciation." },
+            { id: 13, word: "approach", pos: "verb", meaning: "接近、方法", example: "We need a new approach to solve this issue." },
+            { id: 14, word: "appropriate", pos: "adj", meaning: "合適的、恰當的", example: "Wear appropriate clothes for the formal dinner." },
+            { id: 15, word: "artificial", pos: "adj", meaning: "人工的、人造的", example: "This juice contains no artificial flavors." },
+            { id: 16, word: "aspect", pos: "noun", meaning: "方面、觀點", example: "We should consider every aspect of the project." },
+            { id: 17, word: "assess", pos: "verb", meaning: "評估、評價", example: "Teachers assess students' progress regularly." },
+            { id: 18, word: "atmosphere", pos: "noun", meaning: "大氣層、氣氛", example: "The cafe has a cozy and relaxing atmosphere." },
+            { id: 19, word: "attract", pos: "verb", meaning: "吸引", example: "The beautiful beach attracts many tourists." },
+            { id: 20, word: "available", pos: "adj", meaning: "可取得的、有空的", example: "Is this seat available?" },
+            { id: 21, word: "benefit", pos: "noun", meaning: "利益、好處", example: "Regular exercise brings many health benefits." },
+            { id: 22, word: "budget", pos: "noun", meaning: "預算", example: "We must stay within our marketing budget." },
+            { id: 23, word: "calculate", pos: "verb", meaning: "計算", example: "Can you calculate the total cost?" },
+            { id: 24, word: "candidate", pos: "noun", meaning: "候選人、應徵者", example: "Several qualified candidates applied for the position." },
+            { id: 25, word: "capacity", pos: "noun", meaning: "容量、能力", example: "The stadium has a seating capacity of 50,000." },
+            { id: 26, word: "category", pos: "noun", meaning: "種類、類別", example: "Books are organized by category in the library." },
+            { id: 27, word: "challenge", pos: "noun", meaning: "挑戰", example: "She is ready to face any new challenge." },
+            { id: 28, word: "circumstance", pos: "noun", meaning: "情況、環境", example: "Under no circumstances should you give up." },
+            { id: 29, word: "collaborate", pos: "verb", meaning: "合作、協同", example: "We collaborate with international teams." },
+            { id: 30, word: "comfortable", pos: "adj", meaning: "舒適的", example: "This sofa is extremely comfortable." },
+            { id: 31, word: "commercial", pos: "adj", meaning: "商業的", example: "The commercial success of the film was huge." },
+            { id: 32, word: "commit", pos: "verb", meaning: "委託、投入、犯(罪)", example: "He is fully committed to his career." },
+            { id: 33, word: "communicate", pos: "verb", meaning: "溝通、傳達", example: "Good leaders communicate clearly with their team." },
+            { id: 34, word: "compare", pos: "verb", meaning: "比較", example: "Compare prices before making a purchase." },
+            { id: 35, word: "compensate", pos: "verb", meaning: "補償、賠償", example: "The company will compensate for the delay." },
+            { id: 36, word: "competent", pos: "adj", meaning: "勝任的、有能力的", example: "She is a highly competent manager." },
+            { id: 37, word: "complex", pos: "adj", meaning: "複雜的", example: "This puzzle is extremely complex." },
+            { id: 38, word: "component", pos: "noun", meaning: "零件、成分", example: "Engine is a vital component of a car." },
+            { id: 39, word: "conclude", pos: "verb", meaning: "結論、結束", example: "Let us conclude the meeting with a summary." },
+            { id: 40, word: "confident", pos: "adj", meaning: "有信心的", example: "Be confident in your presentation." },
+            { id: 41, word: "consequence", pos: "noun", meaning: "結果、後果", example: "Every action has its consequence." },
+            { id: 42, word: "consider", pos: "verb", meaning: "考慮", example: "Please consider my proposal." },
+            { id: 43, word: "constant", pos: "adj", meaning: "持續的、經常的", example: "Technology is in a state of constant change." },
+            { id: 44, word: "consume", pos: "verb", meaning: "消耗、消費", example: "Electric cars consume less energy." },
+            { id: 45, word: "contribute", pos: "verb", meaning: "貢獻、投稿", example: "Everyone can contribute to environmental protection." },
+            { id: 46, word: "convenient", pos: "adj", meaning: "方便的", example: "Online shopping is very convenient." },
+            { id: 47, word: "creative", pos: "adj", meaning: "有創意的", example: "Designers need a creative mind." },
+            { id: 48, word: "crucial", pos: "adj", meaning: "至關重要的", example: "Timing is crucial for this project." },
+            { id: 49, word: "current", pos: "adj", meaning: "當前的、目前的", example: "What is your current address?" },
+            { id: 50, word: "customer", pos: "noun", meaning: "顧客、客戶", example: "Customer satisfaction is our top priority." },
+            { id: 51, word: "decade", pos: "noun", meaning: "十年", example: "A decade has passed since we graduated." },
+            { id: 52, word: "decision", pos: "noun", meaning: "決定", example: "It was a tough decision to make." },
+            { id: 53, word: "declare", pos: "verb", meaning: "宣告、聲明", example: "The government declared a state of emergency." },
+            { id: 54, word: "define", pos: "verb", meaning: "定義", example: "How do you define success?" },
+            { id: 55, word: "delicate", pos: "adj", meaning: "脆弱的、精緻的", example: "Handle this glass with care; it is very delicate." },
+            { id: 56, word: "demonstrate", pos: "verb", meaning: "示範、證明", example: "Let me demonstrate how this machine works." },
+            { id: 57, word: "dense", pos: "adj", meaning: "稠密的、濃密的", example: "The forest was dark and dense." },
+            { id: 58, word: "department", pos: "noun", meaning: "部門、系所", example: "She works in the marketing department." },
+            { id: 59, word: "depress", pos: "verb", meaning: "使沮喪、使蕭條", example: "Bad news can depress anyone." },
+            { id: 60, word: "design", pos: "verb", meaning: "設計", example: "He designs modern web interfaces." },
+            { id: 61, word: "detect", pos: "verb", meaning: "偵測、察覺", example: "Smoke detectors can detect fire early." },
+            { id: 62, word: "determine", pos: "verb", meaning: "決定、查明", example: "We need to determine the cause of the error." },
+            { id: 63, word: "develop", pos: "verb", meaning: "發展、開發", example: "They develop mobile applications." },
+            { id: 64, word: "device", pos: "noun", meaning: "裝置、設備", example: "Smartphone is a portable electronic device." },
+            { id: 65, word: "differ", pos: "verb", meaning: "不同、相異", example: "Opinions on this matter differ widely." },
+            { id: 66, word: "dimension", pos: "noun", meaning: "尺寸、維度", example: "Measure the exact dimensions of the room." },
+            { id: 67, word: "discover", pos: "verb", meaning: "發現", example: "Columbus discovered America in 1492." },
+            { id: 68, word: "distribute", pos: "verb", meaning: "分配、分發", example: "Volunteers distribute food to the homeless." },
+            { id: 69, word: "diverse", pos: "adj", meaning: "多樣化的", example: "Taiwan has a diverse culture." },
+            { id: 70, word: "document", pos: "noun", meaning: "文件、檔案", example: "Please sign this important document." },
+            { id: 71, word: "dynamic", pos: "adj", meaning: "動態的、充滿活力的", example: "The tech industry is fast-paced and dynamic." },
+            { id: 72, word: "economy", pos: "noun", meaning: "經濟", example: "Global economy is recovering gradually." },
+            { id: 73, word: "effective", pos: "adj", meaning: "有效的", example: "This is a highly effective study method." },
+            { id: 74, word: "efficient", pos: "adj", meaning: "效率高的", example: "Electric engines are very efficient." },
+            { id: 75, word: "eliminate", pos: "verb", meaning: "消除、排除", example: "We must eliminate unnecessary waste." },
+            { id: 76, word: "embrace", pos: "verb", meaning: "擁抱、欣然接受", example: "Embrace new technologies to stay ahead." },
+            { id: 77, word: "emerge", pos: "verb", meaning: "浮現、出現", example: "New trends emerge every single year." },
+            { id: 78, word: "emphasis", pos: "noun", meaning: "強調、重點", example: "The school puts great emphasis on reading." },
+            { id: 79, word: "enable", pos: "verb", meaning: "使能夠", example: "This app enables you to learn faster." },
+            { id: 80, word: "encounter", pos: "verb", meaning: "遭遇、遇到", example: "We may encounter some technical difficulties." },
+            { id: 81, word: "engage", pos: "verb", meaning: "參與、吸引", example: "Interactive lessons engage students well." },
+            { id: 82, word: "enhance", pos: "verb", meaning: "提高、增強", example: "Good lighting can enhance photography." },
+            { id: 83, word: "ensure", pos: "verb", meaning: "確保、保證", example: "Please ensure your work is error-free." },
+            { id: 84, word: "environment", pos: "noun", meaning: "環境", example: "Protecting the environment is everyone's duty." },
+            { id: 85, word: "establish", pos: "verb", meaning: "建立、設立", example: "The company was established in 2010." },
+            { id: 86, word: "evaluate", pos: "verb", meaning: "評估", example: "Managers evaluate employee performance annually." },
+            { id: 87, word: "evidence", pos: "noun", meaning: "證據", example: "Police found clear evidence at the crime scene." },
+            { id: 88, word: "exceed", pos: "verb", meaning: "超過、勝過", example: "Sales exceeded our initial expectations." },
+            { id: 89, word: "expand", pos: "verb", meaning: "擴大、擴展", example: "The company plans to expand overseas." },
+            { id: 90, word: "expert", pos: "noun", meaning: "專家", example: "She is an expert in artificial intelligence." },
+            { id: 91, word: "explore", pos: "verb", meaning: "探索", example: "Let us explore new career opportunities." },
+            { id: 92, word: "expose", pos: "verb", meaning: "暴露、揭露", example: "Do not expose skin to direct sunlight too long." },
+            { id: 93, word: "facilitate", pos: "verb", meaning: "促進、使便利", example: "Technology facilitates remote communication." },
+            { id: 94, word: "factor", pos: "noun", meaning: "因素", example: "Price is an important factor when buying cars." },
+            { id: 95, word: "feature", pos: "noun", meaning: "特色、特徵", example: "What is your favorite app feature?" },
+            { id: 96, word: "flexible", pos: "adj", meaning: "有彈性的、靈活的", example: "We offer flexible working hours." },
+            { id: 97, word: "fluctuate", pos: "verb", meaning: "波動、起伏", example: "Stock prices fluctuate daily." },
+            { id: 98, word: "focus", pos: "verb", meaning: "聚焦、專注", example: "Focus on your goals and never give up." },
+            { id: 99, word: "forecast", pos: "noun", meaning: "預報、預測", example: "The weather forecast predicts rain tomorrow." },
+            { id: 100, word: "frequent", pos: "adj", meaning: "頻繁的", example: "He is a frequent traveler to Japan." }
+        ];
+
+        // Global State Management
+        let customVocabs = JSON.parse(localStorage.getItem('customVocabs')) || [];
+        let mistakes = JSON.parse(localStorage.getItem('mistakes')) || [];
+        let stats = JSON.parse(localStorage.getItem('vocabStats')) || { totalAnswered: 0, correctCount: 0 };
+
+        let allVocabs = [...defaultVocabs, ...customVocabs];
+
+        // Listen Game State
+        let currentListenItem = null;
+        let listenScore = 0;
+        let listenCount = 0;
+
+        // Read Game State
+        let currentReadItem = null;
+        let readIsCorrectMapping = true;
+        let readScore = 0;
+        let readCount = 0;
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            updateDashboardStats();
+            renderVocabList(defaultVocabs);
+            renderFeaturedWords();
+            renderCustomVocabs();
+            renderMistakes();
+            initListenGame();
+            initReadGame();
+        };
+
+        // Tab Switching Mechanism
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.target === tabId) {
+                    btn.classList.add('text-indigo-600', 'bg-indigo-50');
+                } else {
+                    btn.classList.remove('text-indigo-600', 'bg-indigo-50');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Web Speech API Pronunciation
+        function speakWord(text) {
+            if (!('speechSynthesis' in window)) {
+                showToast('您的瀏覽器不支援語音朗讀功能', 'error');
+                return;
+            }
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Dashboard Stats Update
+        function updateDashboardStats() {
+            allVocabs = [...defaultVocabs, ...customVocabs];
+            document.getElementById('statTotalVocab').innerText = allVocabs.length;
+            document.getElementById('statTotalAnswered').innerText = stats.totalAnswered;
+            
+            const accuracy = stats.totalAnswered > 0 ? Math.round((stats.correctCount / stats.totalAnswered) * 100) : 0;
+            document.getElementById('statAccuracy').innerText = accuracy + '%';
+            
+            document.getElementById('statMistakes').innerText = mistakes.length;
+
+            const badge = document.getElementById('mistakeBadge');
+            if (mistakes.length > 0) {
+                badge.innerText = mistakes.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            localStorage.setItem('vocabStats', JSON.stringify(stats));
+        }
+
+        // Render Featured Words on Dashboard
+        function renderFeaturedWords() {
+            const container = document.getElementById('featuredWordsContainer');
+            container.innerHTML = '';
+            const shuffled = [...defaultVocabs].sort(() => 0.5 - Math.random());
+            const featured = shuffled.slice(0, 3);
+
+            featured.forEach(item => {
+                container.innerHTML += `
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs uppercase font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${item.pos}</span>
+                                <button onclick="speakWord('${item.word}')" class="text-indigo-600 hover:text-indigo-800 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center transition">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
+                            <h4 class="text-lg font-bold text-slate-800 mt-2">${item.word}</h4>
+                            <p class="text-sm font-medium text-slate-600">${item.meaning}</p>
+                        </div>
+                        <p class="text-xs text-slate-400 italic bg-white p-2.5 rounded-lg border border-slate-100">"${item.example}"</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Render Vocab Library
+        function renderVocabList(list) {
+            const grid = document.getElementById('vocabGrid');
+            grid.innerHTML = '';
+            list.forEach(item => {
+                grid.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs uppercase font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${item.pos}</span>
+                                <button onclick="speakWord('${item.word}')" class="text-indigo-600 hover:text-indigo-800 w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
+                            <h4 class="text-xl font-bold text-slate-800 mt-2">${item.word}</h4>
+                            <p class="text-sm font-semibold text-slate-600">${item.meaning}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <p class="text-xs text-slate-500 italic">"${item.example}"</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterVocabList() {
+            const query = document.getElementById('vocabSearchInput').value.toLowerCase();
+            const combined = [...defaultVocabs, ...customVocabs];
+            const filtered = combined.filter(i => i.word.toLowerCase().includes(query) || i.meaning.includes(query));
+            renderVocabList(filtered);
+        }
+
+        // Mode 1: Listen Game Logic
+        function initListenGame() {
+            const combined = [...defaultVocabs, ...customVocabs];
+            currentListenItem = combined[Math.floor(Math.random() * combined.length)];
+            
+            speakWord(currentListenItem.word);
+
+            document.getElementById('listenAudioPrompt').innerText = "（已自動發音，請選出正確中文）";
+            document.getElementById('listenFeedback').classList.add('hidden');
+            document.getElementById('nextListenBtn').classList.add('hidden');
+
+            let options = [currentListenItem];
+            while(options.length < 4) {
+                let randomItem = combined[Math.floor(Math.random() * combined.length)];
+                if(!options.some(o => o.id === randomItem.id)) {
+                    options.push(randomItem);
+                }
+            }
+            options.sort(() => 0.5 - Math.random());
+
+            const optionsContainer = document.getElementById('listenOptions');
+            optionsContainer.innerHTML = '';
+            options.forEach(opt => {
+                optionsContainer.innerHTML += `
+                    <button onclick="checkListenAnswer(${opt.id}, this)" class="listen-opt-btn p-3.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl text-sm font-medium text-slate-700 text-left transition flex items-center justify-between">
+                        <span>${opt.meaning}</span>
+                        <i class="fa-regular fa-circle text-slate-300"></i>
+                    </button>
+                `;
+            });
+        }
+
+        function playCurrentListenAudio() {
+            if(currentListenItem) speakWord(currentListenItem.word);
+        }
+
+        function checkListenAnswer(selectedId, btnElement) {
+            document.querySelectorAll('.listen-opt-btn').forEach(b => b.disabled = true);
+
+            stats.totalAnswered++;
+            listenCount++;
+
+            const feedback = document.getElementById('listenFeedback');
+            feedback.classList.remove('hidden');
+
+            if(selectedId === currentListenItem.id) {
+                stats.correctCount++;
+                listenScore++;
+                btnElement.classList.remove('bg-slate-50', 'border-slate-200');
+                btnElement.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-700');
+                feedback.className = "text-center py-3 rounded-xl font-semibold text-sm bg-emerald-50 text-emerald-700 border border-emerald-200";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5"></i> 太棒了！回答正確！`;
+            } else {
+                btnElement.classList.remove('bg-slate-50', 'border-slate-200');
+                btnElement.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-700');
+                feedback.className = "text-center py-3 rounded-xl font-semibold text-sm bg-rose-50 text-rose-700 border border-rose-200";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5"></i> 答錯囉！正確答案是：${currentListenItem.meaning} (${currentListenItem.word})`;
+                
+                if(!mistakes.some(m => m.word === currentListenItem.word)) {
+                    mistakes.push(currentListenItem);
+                    localStorage.setItem('mistakes', JSON.stringify(mistakes));
+                }
+            }
+
+            document.getElementById('listenScoreBoard').innerText = `正確數: ${listenScore} | 題數: ${listenCount}`;
+            document.getElementById('nextListenBtn').classList.remove('hidden');
+            updateDashboardStats();
+            renderMistakes();
+        }
+
+        function nextListenQuestion() {
+            initListenGame();
+        }
+
+        // Mode 2: Read Game Logic
+        function initReadGame() {
+            const combined = [...defaultVocabs, ...customVocabs];
+            currentReadItem = combined[Math.floor(Math.random() * combined.length)];
+            
+            readIsCorrectMapping = Math.random() >= 0.5;
+            let displayMeaning = currentReadItem.meaning;
+
+            if(!readIsCorrectMapping) {
+                let wrongItem = combined[Math.floor(Math.random() * combined.length)];
+                while(wrongItem.id === currentReadItem.id) {
+                    wrongItem = combined[Math.floor(Math.random() * combined.length)];
+                }
+                displayMeaning = wrongItem.meaning;
+            }
+
+            document.getElementById('readPos').innerText = currentReadItem.pos;
+            document.getElementById('readWord').innerText = currentReadItem.word;
+            document.getElementById('readChinese').innerText = displayMeaning;
+            document.getElementById('readFeedback').classList.add('hidden');
+        }
+
+        function answerReadGame(userChoice) {
+            stats.totalAnswered++;
+            readCount++;
+
+            const feedback = document.getElementById('readFeedback');
+            feedback.classList.remove('hidden');
+
+            const isCorrect = (userChoice === readIsCorrectMapping);
+
+            if(isCorrect) {
+                stats.correctCount++;
+                readScore++;
+                feedback.className = "text-center py-3 rounded-xl font-semibold text-sm bg-emerald-50 text-emerald-700 border border-emerald-200";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1.5"></i> 判斷正確！`;
+            } else {
+                feedback.className = "text-center py-3 rounded-xl font-semibold text-sm bg-rose-50 text-rose-700 border border-rose-200";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1.5"></i> 判斷錯誤！此單字正確意涵為：${currentReadItem.meaning}`;
+                
+                if(!mistakes.some(m => m.word === currentReadItem.word)) {
+                    mistakes.push(currentReadItem);
+                    localStorage.setItem('mistakes', JSON.stringify(mistakes));
+                }
+            }
+
+            document.getElementById('readScoreBoard').innerText = `正確數: ${readScore} | 題數: ${readCount}`;
+            updateDashboardStats();
+            renderMistakes();
+
+            setTimeout(() => {
+                initReadGame();
+            }, 1500);
+        }
+
+        // Mistakes Management
+        function renderMistakes() {
+            const grid = document.getElementById('mistakesGrid');
+            const clearBtn = document.getElementById('clearMistakesBtn');
+            grid.innerHTML = '';
+
+            if(mistakes.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-100">
+                        <div class="w-16 h-16 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-3">
+                            <i class="fa-solid fa-award"></i>
+                        </div>
+                        <h4 class="font-bold text-slate-700 text-lg">目前沒有錯題記錄！</h4>
+                        <p class="text-sm text-slate-400 mt-1">太棒了！繼續保持，挑戰更多測驗吧！</p>
+                    </div>
+                `;
+                clearBtn.classList.add('hidden');
+                return;
+            }
+
+            clearBtn.classList.remove('hidden');
+            mistakes.forEach(item => {
+                grid.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs uppercase font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">${item.pos}</span>
+                                <button onclick="speakWord('${item.word}')" class="text-indigo-600 hover:text-indigo-800 w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center transition">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
+                            <h4 class="text-xl font-bold text-slate-800 mt-2">${item.word}</h4>
+                            <p class="text-sm font-semibold text-slate-600">${item.meaning}</p>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <p class="text-xs text-slate-500 italic">"${item.example}"</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function clearMistakes() {
+            mistakes = [];
+            localStorage.removeItem('mistakes');
+            renderMistakes();
+            updateDashboardStats();
+            showToast('錯題本已清空', 'success');
+        }
+
+        // Custom Vocab Management
+        function addCustomVocab(event) {
+            event.preventDefault();
+            const word = document.getElementById('customWord').value.trim();
+            const pos = document.getElementById('customPos').value;
+            const meaning = document.getElementById('customMeaning').value.trim();
+            const example = document.getElementById('customExample').value.trim();
+
+            const newItem = { id: Date.now(), word, pos, meaning, example };
+            customVocabs.push(newItem);
+            localStorage.setItem('customVocabs', JSON.stringify(customVocabs));
+
+            document.getElementById('customVocabForm').reset();
+            renderCustomVocabs();
+            renderVocabList([...defaultVocabs, ...customVocabs]);
+            updateDashboardStats();
+            showToast('成功新增自訂單字！', 'success');
+        }
+
+        function renderCustomVocabs() {
+            const listContainer = document.getElementById('customVocabList');
+            listContainer.innerHTML = '';
+
+            if(customVocabs.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-slate-400 italic">尚無自訂單字，請透過上方表單新增。</p>`;
+                return;
+            }
+
+            customVocabs.forEach(item => {
+                listContainer.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 text-sm">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="speakWord('${item.word}')" class="text-indigo-600 hover:text-indigo-800">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                            <div>
+                                <span class="font-bold text-slate-800">${item.word}</span>
+                                <span class="text-xs text-slate-400 ml-2">(${item.meaning})</span>
+                            </div>
+                        </div>
+                        <button onclick="deleteCustomVocab(${item.id})" class="text-rose-500 hover:text-rose-700 text-xs font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-50 transition">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteCustomVocab(id) {
+            customVocabs = customVocabs.filter(i => i.id !== id);
+            localStorage.setItem('customVocabs', JSON.stringify(customVocabs));
+            renderCustomVocabs();
+            renderVocabList([...defaultVocabs, ...customVocabs]);
+            updateDashboardStats();
+            showToast('已刪除自訂單字', 'success');
+        }
+
+        // Toast Notification Helper
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.innerText = message;
+            if(type === 'success') {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400";
+            } else {
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
